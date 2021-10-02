@@ -19,54 +19,40 @@ namespace AzureDevOpsRestApi.Infrastructure.Services
             _connectionUri = $"{AzureDevOpsRestApiResource.Uri}/{AzureDevOpsRestApiResource.Organization}";
         }
         
-        public async Task<GitPush> PushAsync(ActionModel actionModel)
+        public async Task<GitPush> PushAsync(GitModel gitModel)
         {
             using var gitClient = new GitHttpClient(new Uri(_connectionUri), _credential);
             var repository = await gitClient.GetRepositoryAsync(
                 AzureDevOpsRestApiResource.Project, 
                 AzureDevOpsRestApiResource.Repository);
-            actionModel.GitRef = await GitProvider.GetBranchesAsync(
-                gitClient, 
-                repository,
-                null);
-            var createBranch = GitProvider.CreateBranch(actionModel);
-            var createCommit = GitProvider.CreateCommit(
-                actionModel, 
-                VersionControlChangeType.Add);
-            var createGitPush = GitProvider.CreateGitPush(
-                createBranch, 
-                createCommit);
-            var createPushAsync = await gitClient.CreatePushAsync(
-                createGitPush, 
-                repository.Id);
+            
+            gitModel.GitRef = await GitProvider.GetBranchesAsync(gitClient, repository, null);
+            var createBranch = GitProvider.CreateBranch(gitModel);
+            var createCommit = GitProvider.CreateCommit(gitModel, VersionControlChangeType.Add);
+            var createGitPush = GitProvider.CreateGitPush(createBranch, createCommit);
+            var createPushAsync = await gitClient.CreatePushAsync(createGitPush, repository.Id);
             
             return createPushAsync;
         }
         
-        public async Task<GitItem> GetAsync(ActionModel actionModel)
+        public async Task<GitItem> GetAsync(GitModel gitModel)
         {
             using var gitClient = new GitHttpClient(new Uri(_connectionUri), _credential);
             var getRepositoryAsync = await gitClient.GetRepositoryAsync(
                 AzureDevOpsRestApiResource.Project, 
                 AzureDevOpsRestApiResource.Repository);
             
-            var gitVersionDescriptor = new GitVersionDescriptor()
-            {
-                VersionType = GitVersionType.Branch,
-                Version = actionModel.Branch,
-                VersionOptions = GitVersionOptions.None
-            };
             var getNameAsync = await GitProvider.GetNameAsync(
-                actionModel, 
+                gitModel, 
                 getRepositoryAsync, 
                 gitClient, 
-                gitVersionDescriptor);
+                GitProvider.GetGitVersionDescriptor(gitModel));
 
             return await gitClient.GetItemAsync(
                 getRepositoryAsync.Id, 
                 getNameAsync, 
                 includeContent: true, 
-                versionDescriptor: gitVersionDescriptor);
+                versionDescriptor: GitProvider.GetGitVersionDescriptor(gitModel));
         }
     }
 }

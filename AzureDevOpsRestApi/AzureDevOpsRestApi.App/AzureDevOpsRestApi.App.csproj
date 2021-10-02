@@ -13,8 +13,4 @@
       <ProjectReference Include="..\AzureDevOpsRestApi.Infrastructure\AzureDevOpsRestApi.Infrastructure.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Helpers" />
-    </ItemGroup>
-
 </Project>

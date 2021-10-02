@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AzureDevOpsRestApi.Infrastructure.Constants;
 using AzureDevOpsRestApi.Infrastructure.Enums;
 using AzureDevOpsRestApi.Infrastructure.Helpers;
 using AzureDevOpsRestApi.Infrastructure.Models;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
+using GitConstants = AzureDevOpsRestApi.Infrastructure.Constants.GitConstants;
 
 namespace AzureDevOpsRestApi.Infrastructure.Providers
 {
@@ -43,29 +43,27 @@ namespace AzureDevOpsRestApi.Infrastructure.Providers
         }
 
         public static async Task<string> GetNameAsync(
-            ActionModel actionModel,
+            GitModel gitModel,
             GitRepository repository,
             GitHttpClient gitClient,
             GitVersionDescriptor versionDescriptor)
         {
-            var componentType = Enum.GetName(typeof(ContentType), actionModel.ContentType);
-            var scopePath = $"/{actionModel.Commit}.{componentType}";
-            var references = await gitClient.GetItemsAsync(
-                repository.Id,
-                scopePath,
-                VersionControlRecursionType.OneLevel,
-                versionDescriptor: versionDescriptor);
+            var componentType = Enum.GetName(typeof(ContentType), gitModel.ContentType);
+            var scopePath = $"/{gitModel.Commit}.{componentType}";
+            
+            var getItemsAsync = await gitClient.GetItemsAsync
+                (repository.Id, scopePath, VersionControlRecursionType.OneLevel, versionDescriptor: versionDescriptor);
 
-            return references.FirstOrDefault()?.Path!;
+            return getItemsAsync.FirstOrDefault()?.Path!;
         }
 
         public static GitCommitRef CreateCommit(
-            ActionModel actionModel,
+            GitModel gitModel,
             VersionControlChangeType versionControlChangeType)
         {
-            var itemType = Enum.GetName(actionModel.ContentType);
+            var itemType = Enum.GetName(gitModel.ContentType)?.ToLower();
 
-            var itemPath = $"/{actionModel.Commit}.{itemType}";
+            var itemPath = $"/{gitModel.Commit}.{itemType}";
 
             var gitChanges = new List<GitChange>
             {
@@ -76,9 +74,9 @@ namespace AzureDevOpsRestApi.Infrastructure.Providers
                     {
                         Path = itemPath
                     },
-                    NewContent = new ItemContent()
+                    NewContent = new ItemContent
                     {
-                        Content = actionModel.Content,
+                        Content = gitModel.Content,
                         ContentType = ItemContentType.RawText
                     }
                 }
@@ -86,17 +84,27 @@ namespace AzureDevOpsRestApi.Infrastructure.Providers
 
             return new GitCommitRef
             {
-                Comment = actionModel.Commit,
+                Comment = gitModel.Commit,
                 Changes = gitChanges
             };
         }
 
-        public static GitRefUpdate CreateBranch(ActionModel action)
+        public static GitVersionDescriptor GetGitVersionDescriptor(GitModel gitModel)
+        {
+            return new GitVersionDescriptor()
+            {
+                VersionType = GitVersionType.Branch,
+                Version = gitModel.Branch,
+                VersionOptions = GitVersionOptions.None
+            };
+        }
+
+        public static GitRefUpdate CreateBranch(GitModel git)
         {
             return new GitRefUpdate
             {
-                Name = $"{ApplicationConstants.Branches.BranchReference}{action.Branch}",
-                OldObjectId = action.GitRef.ObjectId
+                Name = $"{GitConstants.Branches.BranchReference}{git.Branch}",
+                OldObjectId = git.GitRef.ObjectId
             };
         }
     }

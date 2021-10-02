@@ -12,17 +12,22 @@ namespace AzureDevOpsRestApi.App
         private static async Task Main()
         {
             var azureDevOpsClient = new AzureDevOpsService();
-            var action = new ActionModel
+            
+            var actionService = new GitActionService(azureDevOpsClient, GetGitModel());
+
+            await actionService.ActionConsole();
+
+            Console.ReadLine();
+        }
+
+        private static GitModel GetGitModel()
+        {
+            return new GitModel
             { 
                 Content = "hello!",
                 ContentType = ContentType.Txt
                     
             };
-            var actionService = new ActionService(azureDevOpsClient, action);
-
-            await actionService.ActionConsole();
-
-            Console.ReadLine();
         }
     }
 }
