@@ -12,9 +12,7 @@ namespace AzureDevOpsRestApi.App
         private static async Task Main()
         {
             var azureDevOpsClient = new AzureDevOpsService();
-            
             var actionService = new GitActionService(azureDevOpsClient, GetGitModel());
-
             await actionService.ActionConsole();
 
             Console.ReadLine();
@@ -26,7 +24,6 @@ namespace AzureDevOpsRestApi.App
             { 
                 Content = "hello!",
                 ContentType = ContentType.Txt
-                    
             };
         }
     }

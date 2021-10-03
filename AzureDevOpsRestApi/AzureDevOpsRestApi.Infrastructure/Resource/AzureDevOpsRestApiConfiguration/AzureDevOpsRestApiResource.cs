@@ -7,5 +7,6 @@
         public const string Project = "";
         public const string Repository = "";
         public const string Uri = "";
+        public static readonly string RunPipelineTemplate = $"";
     }
 }

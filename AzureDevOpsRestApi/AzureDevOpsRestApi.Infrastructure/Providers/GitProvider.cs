@@ -107,5 +107,13 @@ namespace AzureDevOpsRestApi.Infrastructure.Providers
                 OldObjectId = git.GitRef.ObjectId
             };
         }
+        
+        public static string RunPipeLineRequestBody(Guid repositoryId)
+        {
+            var bodyJson = @"{""parameters"": {""parameterName"": ""parameterValue""},""variables"": {},""resources"": {""repositories"": {""self"": {
+                ""repository"": {""id"": """ + repositoryId + @""",""type"": ""azureReposGit""},""refName"": ""refs/heads/develop""}}}}";
+
+            return bodyJson;
+        }
     }
 }

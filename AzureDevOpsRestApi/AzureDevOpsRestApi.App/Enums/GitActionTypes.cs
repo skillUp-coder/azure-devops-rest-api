@@ -3,6 +3,7 @@
     public enum GitActionTypes
     {
         Push = 1,
-        Get = 2
+        Get = 2,
+        RunPipeline = 3
     }
 }
